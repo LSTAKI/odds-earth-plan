@@ -3,17 +3,66 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-const ExportButtons = () => {
+interface ExportButtonsProps {
+  data: any;
+}
+
+const ExportButtons = ({ data }: ExportButtonsProps) => {
   const handleExportCSV = () => {
-    toast.success("CSV export started", {
-      description: "Your weather data is being prepared for download.",
-    });
+    try {
+      const csv = convertToCSV(data);
+      downloadFile(csv, 'weather-analysis.csv', 'text/csv');
+      toast.success("CSV downloaded", {
+        description: "Your weather analysis has been exported.",
+      });
+    } catch (error) {
+      toast.error("Export failed", {
+        description: "Could not export data to CSV.",
+      });
+    }
   };
 
   const handleExportJSON = () => {
-    toast.success("JSON export started", {
-      description: "Your weather data is being prepared for download.",
+    try {
+      const json = JSON.stringify(data, null, 2);
+      downloadFile(json, 'weather-analysis.json', 'application/json');
+      toast.success("JSON downloaded", {
+        description: "Your weather analysis has been exported.",
+      });
+    } catch (error) {
+      toast.error("Export failed", {
+        description: "Could not export data to JSON.",
+      });
+    }
+  };
+
+  const convertToCSV = (data: any) => {
+    let csv = 'Location,Date,Conditions\n';
+    csv += `"${data.location}","${data.date}","${data.conditions.join(', ')}"\n\n`;
+    
+    csv += 'Condition,Probability\n';
+    data.results.probabilities.forEach((item: any) => {
+      csv += `"${item.condition}",${item.probability}\n`;
     });
+    
+    csv += '\nYear,Temperature (°F),Humidity (%)\n';
+    data.results.historicalTrends.forEach((item: any) => {
+      csv += `${item.year},${item.temperature},${item.humidity}\n`;
+    });
+    
+    return csv;
+  };
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (

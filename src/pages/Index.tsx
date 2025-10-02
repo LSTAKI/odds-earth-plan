@@ -12,12 +12,22 @@ import ExportButtons from "@/components/ExportButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { LocationCoordinates, calculateProbabilities, fetchHistoricalTrends } from "@/services/weatherService";
+
+interface WeatherResults {
+  probabilities: { condition: string; probability: number }[];
+  historicalTrends: { year: string; temperature: number; humidity: number }[];
+  primaryProbability: number;
+}
 
 const Index = () => {
   const [location, setLocation] = useState("");
+  const [coordinates, setCoordinates] = useState<LocationCoordinates | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [weatherResults, setWeatherResults] = useState<WeatherResults | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConditionToggle = (id: string) => {
     setSelectedConditions((prev) =>
@@ -25,18 +35,60 @@ const Index = () => {
     );
   };
 
-  const handleGetOdds = () => {
-    if (!location || !date || selectedConditions.length === 0) {
+  const handleLocationSelect = (locationName: string, coords: LocationCoordinates) => {
+    setLocation(locationName);
+    setCoordinates(coords);
+  };
+
+  const handleGetOdds = async () => {
+    if (!location || !coordinates || !date || selectedConditions.length === 0) {
       toast.error("Please fill all fields", {
         description: "Select a location, date, and at least one weather condition.",
       });
       return;
     }
 
-    setShowResults(true);
-    toast.success("Analysis complete!", {
-      description: "Weather probability data has been calculated.",
-    });
+    setIsLoading(true);
+    toast.loading("Analyzing weather data...", { id: "weather-analysis" });
+
+    try {
+      // Fetch real probability data
+      const probabilities = await calculateProbabilities(
+        coordinates.lat,
+        coordinates.lon,
+        date,
+        selectedConditions
+      );
+
+      // Fetch historical trends
+      const trends = await fetchHistoricalTrends(
+        coordinates.lat,
+        coordinates.lon,
+        date
+      );
+
+      const primaryProbability = probabilities.length > 0 ? probabilities[0].probability : 0;
+
+      setWeatherResults({
+        probabilities,
+        historicalTrends: trends,
+        primaryProbability,
+      });
+
+      setShowResults(true);
+      toast.success("Analysis complete!", {
+        id: "weather-analysis",
+        description: "Real weather probability data from NASA and historical records.",
+      });
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      toast.error("Failed to fetch weather data", {
+        id: "weather-analysis",
+        description: "Please try again or select a different location.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,7 +124,7 @@ const Index = () => {
                   <h2 className="text-xl font-semibold text-foreground mb-4">Configure Analysis</h2>
                   <div className="space-y-6">
                     <LocationInput
-                      onLocationSelect={setLocation}
+                      onLocationSelect={handleLocationSelect}
                       selectedLocation={location}
                     />
                     <DateSelector date={date} onDateSelect={setDate} />
@@ -87,9 +139,10 @@ const Index = () => {
                   onClick={handleGetOdds}
                   className="w-full h-12 text-base font-semibold"
                   size="lg"
+                  disabled={isLoading}
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Get Weather Odds
+                  {isLoading ? "Analyzing..." : "Get Weather Odds"}
                 </Button>
               </CardContent>
             </Card>
@@ -101,18 +154,26 @@ const Index = () => {
               location={location}
               date={date}
               conditions={selectedConditions}
+              probability={weatherResults?.primaryProbability}
             />
 
-            {showResults && (
+            {showResults && weatherResults && (
               <>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  <ProbabilityChart />
-                  <TimeSeriesChart />
+                  <ProbabilityChart data={weatherResults.probabilities} />
+                  <TimeSeriesChart data={weatherResults.historicalTrends} />
                 </div>
 
-                <MapPlaceholder location={location} />
+                <MapPlaceholder location={location} coordinates={coordinates} />
 
-                <ExportButtons />
+                <ExportButtons 
+                  data={{
+                    location,
+                    date: date?.toISOString(),
+                    conditions: selectedConditions,
+                    results: weatherResults,
+                  }}
+                />
               </>
             )}
           </div>

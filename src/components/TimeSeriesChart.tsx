@@ -1,16 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-const dummyData = [
-  { year: "2019", temperature: 85, humidity: 45 },
-  { year: "2020", temperature: 87, humidity: 48 },
-  { year: "2021", temperature: 89, humidity: 50 },
-  { year: "2022", temperature: 91, humidity: 52 },
-  { year: "2023", temperature: 90, humidity: 49 },
-  { year: "2024", temperature: 92, humidity: 55 },
-];
+interface TimeSeriesChartProps {
+  data: { year: string; temperature: number; humidity: number }[];
+}
 
-const TimeSeriesChart = () => {
+const TimeSeriesChart = ({ data }: TimeSeriesChartProps) => {
   return (
     <Card className="shadow-card border-border animate-fade-in">
       <CardHeader>
@@ -19,7 +14,7 @@ const TimeSeriesChart = () => {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={dummyData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+          <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="year"

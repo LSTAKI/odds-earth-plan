@@ -1,17 +1,26 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const dummyData = [
-  { condition: "Very Hot", probability: 65 },
-  { condition: "Very Cold", probability: 12 },
-  { condition: "Very Wet", probability: 45 },
-  { condition: "Very Windy", probability: 30 },
-  { condition: "Uncomfortable", probability: 55 },
-];
-
 const colors = ["#f97316", "#3b82f6", "#06b6d4", "#6b7280", "#a855f7"];
 
-const ProbabilityChart = () => {
+const conditionLabels: Record<string, string> = {
+  "very-hot": "Very Hot",
+  "very-cold": "Very Cold",
+  "very-wet": "Very Wet",
+  "very-windy": "Very Windy",
+  "uncomfortable": "Uncomfortable",
+};
+
+interface ProbabilityChartProps {
+  data: { condition: string; probability: number }[];
+}
+
+const ProbabilityChart = ({ data }: ProbabilityChartProps) => {
+  const chartData = data.map(item => ({
+    condition: conditionLabels[item.condition] || item.condition,
+    probability: item.probability,
+  }));
+
   return (
     <Card className="shadow-card border-border animate-fade-in">
       <CardHeader>
@@ -20,7 +29,7 @@ const ProbabilityChart = () => {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={dummyData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="condition"
@@ -41,8 +50,8 @@ const ProbabilityChart = () => {
               }}
             />
             <Bar dataKey="probability" radius={[8, 8, 0, 0]}>
-              {dummyData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index]} />
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Bar>
           </BarChart>
