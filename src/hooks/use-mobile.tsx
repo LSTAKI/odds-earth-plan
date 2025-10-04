@@ -1,4 +1,5 @@
 import * as React from "react";
+import { fetchMeteomaticsWeather } from "../services/weatherService";
 
 const MOBILE_BREAKPOINT = 768;
 
