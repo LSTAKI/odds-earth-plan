@@ -189,3 +189,33 @@ export const calculateProbabilities = async (
     return conditions.map(c => ({ condition: c, probability: 50 }));
   }
 };
+
+// =============================
+// Fetch multi-day weather data from Meteomatics
+// =============================
+
+export const fetchMeteomaticsWeather = async (lat: number, lon: number, startDate: string, endDate: string) => {
+  const username = "mulla_takialtaf";
+  const password = "znB49vfFg28RScOiPfz0";
+
+  // Parameters for temperature, wind, precipitation etc.
+  const parameters = "t_2m:C,precip_1h:mm,wind_speed_10m:ms,relative_humidity_2m:p";
+
+  const url = `https://api.meteomatics.com/${startDate}T00:00:00Z--${endDate}T23:00:00Z:PT24H/${parameters}/${lat},${lon}/json`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: "Basic " + btoa(`${username}:${password}`),
+      },
+    });
+
+    if (!response.ok) throw new Error(`Error fetching Meteomatics data: ${response.statusText}`);
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Meteomatics API error:", error);
+    return null;
+  }
+};
