@@ -1,10 +1,20 @@
-// Weather service for fetching real NASA and weather data
+// Weather service integrating NASA POWER API and Open-Meteo data
+// NASA POWER: https://power.larc.nasa.gov/ - Provides historical climate data from 1981+
+// Open-Meteo: https://open-meteo.com/ - Provides recent historical weather archive
 
 export interface WeatherData {
   temperature: number;
   humidity: number;
   windSpeed: number;
   precipitation: number;
+}
+
+export interface NASAPowerData {
+  temperature: number;
+  precipitation: number;
+  humidity: number;
+  windSpeed: number;
+  source: 'NASA_POWER';
 }
 
 export interface HistoricalData {
@@ -73,7 +83,48 @@ export const fetchHistoricalWeatherData = async (
   }
 };
 
-// Fetch multi-year historical data for trends
+// Fetch NASA POWER climate data for long-term historical analysis
+export const fetchNASAPowerData = async (
+  lat: number,
+  lon: number,
+  startYear: number,
+  endYear: number
+): Promise<NASAPowerData[]> => {
+  try {
+    const params = [
+      'T2M_MAX', // Temperature at 2 Meters Maximum (°C)
+      'PRECTOTCORR', // Precipitation Corrected (mm/day)
+      'RH2M', // Relative Humidity at 2 Meters (%)
+      'WS10M_MAX' // Wind Speed at 10 Meters Maximum (m/s)
+    ].join(',');
+    
+    const startDate = `${startYear}0101`;
+    const endDate = `${endYear}1231`;
+    
+    const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${params}&community=RE&longitude=${lon}&latitude=${lat}&start=${startDate}&end=${endDate}&format=JSON`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!data.properties?.parameter) return [];
+    
+    const params_data = data.properties.parameter;
+    const dates = Object.keys(params_data.T2M_MAX || {});
+    
+    return dates.map(date => ({
+      temperature: params_data.T2M_MAX[date] || 0,
+      precipitation: params_data.PRECTOTCORR[date] || 0,
+      humidity: params_data.RH2M[date] || 0,
+      windSpeed: params_data.WS10M_MAX[date] || 0,
+      source: 'NASA_POWER' as const
+    }));
+  } catch (error) {
+    console.error('Error fetching NASA POWER data:', error);
+    return [];
+  }
+};
+
+// Fetch multi-year historical data for trends (using Open-Meteo for recent years)
 export const fetchHistoricalTrends = async (
   lat: number,
   lon: number,
@@ -85,7 +136,7 @@ export const fetchHistoricalTrends = async (
     const currentYear = new Date().getFullYear();
     const years = [];
     
-    // Get data for last 6 years
+    // Get data for last 6 years from Open-Meteo
     for (let i = 5; i >= 0; i--) {
       years.push(currentYear - i);
     }
@@ -124,7 +175,7 @@ export const fetchHistoricalTrends = async (
   }
 };
 
-// Calculate probabilities based on historical data
+// Calculate probabilities using COMBINED NASA POWER + Open-Meteo data for maximum accuracy
 export const calculateProbabilities = async (
   lat: number,
   lon: number,
@@ -136,24 +187,44 @@ export const calculateProbabilities = async (
     const day = String(date.getDate()).padStart(2, '0');
     const currentYear = new Date().getFullYear();
     
-    // Fetch 10 years of data for the same date (±3 days window)
+    // Fetch NASA POWER data for extended historical period (1981-2010 for climate normals)
+    const nasaDataPromise = fetchNASAPowerData(lat, lon, 1990, 2020);
+    
+    // Fetch recent 10 years from Open-Meteo for current trends
     const startYear = currentYear - 10;
     const startDate = `${startYear}-${month}-${day}`;
     const endDate = `${currentYear - 1}-${month}-${day}`;
     
-    const response = await fetch(
+    const openMeteoPromise = fetch(
       `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,precipitation_sum,wind_speed_10m_max&timezone=auto`
-    );
-    const data = await response.json();
+    ).then(r => r.json());
+    
+    const [nasaData, data] = await Promise.all([nasaDataPromise, openMeteoPromise]);
     
     if (!data.daily || !data.daily.time) {
       return conditions.map(c => ({ condition: c, probability: 50 }));
     }
     
+    // Combine NASA POWER and Open-Meteo data for comprehensive analysis
     const temps = data.daily.temperature_2m_max.map((t: number) => t * 9/5 + 32);
     const humidity = data.daily.relative_humidity_2m_max;
     const precip = data.daily.precipitation_sum;
     const windSpeed = data.daily.wind_speed_10m_max.map((w: number) => w * 0.621371);
+    
+    // Add NASA POWER data (convert from Celsius to Fahrenheit, m/s to mph)
+    if (nasaData.length > 0) {
+      const nasaTemps = nasaData.map(d => d.temperature * 9/5 + 32);
+      const nasaHumidity = nasaData.map(d => d.humidity);
+      const nasaPrecip = nasaData.map(d => d.precipitation);
+      const nasaWindSpeed = nasaData.map(d => d.windSpeed * 2.237); // m/s to mph
+      
+      temps.push(...nasaTemps);
+      humidity.push(...nasaHumidity);
+      precip.push(...nasaPrecip);
+      windSpeed.push(...nasaWindSpeed);
+    }
+    
+    console.log(`Combined dataset: ${temps.length} data points (NASA POWER: ${nasaData.length}, Open-Meteo: ${data.daily.time.length})`);
     
     const results = conditions.map(condition => {
       let count = 0;

@@ -9,6 +9,7 @@ import ProbabilityChart from "@/components/ProbabilityChart";
 import TimeSeriesChart from "@/components/TimeSeriesChart";
 import MapPlaceholder from "@/components/MapPlaceholder";
 import ExportButtons from "@/components/ExportButtons";
+import { DataSourceBadge } from "@/components/DataSourceBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -150,6 +151,8 @@ const Index = () => {
 
           {/* Results Section */}
           <div className="lg:col-span-2 space-y-6">
+            <DataSourceBadge />
+            
             <ResultsCard
               location={location}
               date={date}

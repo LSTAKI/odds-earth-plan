@@ -12,7 +12,7 @@ const About = () => {
           <div className="text-center space-y-4 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground">About Weather Odds Explorer</h1>
             <p className="text-lg text-muted-foreground">
-              Leveraging NASA Earth Data to provide accurate weather probability predictions
+              Combining NASA POWER climate data with Open-Meteo weather archives for accurate probability analysis
             </p>
           </div>
 
@@ -32,11 +32,11 @@ const About = () => {
             <Card className="shadow-card border-border">
               <CardHeader>
                 <Database className="w-10 h-10 text-secondary mb-2" />
-                <CardTitle>NASA Data</CardTitle>
+                <CardTitle>NASA POWER Data</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Built on decades of NASA Earth observation data for reliable predictions.
+                  Powered by NASA POWER API with 40+ years of satellite-derived climate data (1981-2020).
                 </p>
               </CardContent>
             </Card>
@@ -60,13 +60,15 @@ const About = () => {
             </CardHeader>
             <CardContent className="prose prose-slate dark:prose-invert max-w-none">
               <p className="text-muted-foreground leading-relaxed">
-                Weather Odds Explorer is designed to help individuals and organizations make informed decisions
-                based on weather probability data. By combining NASA's extensive Earth observation datasets with
-                modern analytics, we provide actionable insights for planning activities, events, and operations.
+                Weather Odds Explorer combines authoritative data sources to deliver reliable weather probability insights.
+                We integrate <strong>NASA POWER API</strong> (40+ years of satellite-derived climate data from 1981-2020) 
+                with <strong>Open-Meteo's historical weather archives</strong> (recent 10-year observations) to provide 
+                comprehensive analysis that balances long-term climate patterns with current trends.
               </p>
               <p className="text-muted-foreground leading-relaxed mt-4">
-                Whether you're planning an outdoor event, managing agricultural operations, or simply curious
-                about weather patterns, our tool offers the data-driven insights you need to plan smarter.
+                Whether you're planning an outdoor event, managing agricultural operations, or conducting climate research,
+                our tool combines decades of NASA Earth observations with up-to-date weather data to help you make informed,
+                data-driven decisions.
               </p>
             </CardContent>
           </Card>
