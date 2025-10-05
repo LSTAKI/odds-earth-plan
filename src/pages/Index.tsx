@@ -12,7 +12,7 @@ import ExportButtons from "@/components/ExportButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { LocationCoordinates, calculateProbabilities, fetchHistoricalTrends, fetchMeteomaticsWeather } from "@/services/weatherService";
+import { LocationCoordinates, calculateProbabilities, fetchHistoricalTrends } from "@/services/weatherService";
 
 interface WeatherResults {
   probabilities: { condition: string; probability: number }[];
@@ -52,7 +52,7 @@ const Index = () => {
     toast.loading("Analyzing weather data...", { id: "weather-analysis" });
 
     try {
-      // Fetch real probability data
+      // Fetch real probability data based on 10 years of historical weather data
       const probabilities = await calculateProbabilities(
         coordinates.lat,
         coordinates.lon,
@@ -60,23 +60,12 @@ const Index = () => {
         selectedConditions
       );
 
-      // Fetch historical trends
+      // Fetch historical trends from last 6 years
       const trends = await fetchHistoricalTrends(
         coordinates.lat,
         coordinates.lon,
         date
       );
-
-      // Try to fetch additional Meteomatics data for enhanced accuracy
-      const dateStr = date.toISOString().split('T')[0];
-      const meteomaticsData = await fetchMeteomaticsWeather(
-        coordinates.lat,
-        coordinates.lon,
-        dateStr,
-        dateStr
-      );
-
-      console.log("Meteomatics API Response:", meteomaticsData);
 
       const primaryProbability = probabilities.length > 0 ? probabilities[0].probability : 0;
 
