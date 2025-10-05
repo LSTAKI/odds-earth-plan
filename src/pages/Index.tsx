@@ -12,7 +12,7 @@ import ExportButtons from "@/components/ExportButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { LocationCoordinates, calculateProbabilities, fetchHistoricalTrends } from "@/services/weatherService";
+import { LocationCoordinates, calculateProbabilities, fetchHistoricalTrends, fetchMeteomaticsWeather } from "@/services/weatherService";
 
 interface WeatherResults {
   probabilities: { condition: string; probability: number }[];
@@ -66,6 +66,17 @@ const Index = () => {
         coordinates.lon,
         date
       );
+
+      // Try to fetch additional Meteomatics data for enhanced accuracy
+      const dateStr = date.toISOString().split('T')[0];
+      const meteomaticsData = await fetchMeteomaticsWeather(
+        coordinates.lat,
+        coordinates.lon,
+        dateStr,
+        dateStr
+      );
+
+      console.log("Meteomatics API Response:", meteomaticsData);
 
       const primaryProbability = probabilities.length > 0 ? probabilities[0].probability : 0;
 
