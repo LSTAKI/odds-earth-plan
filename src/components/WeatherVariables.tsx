@@ -1,4 +1,4 @@
-import { Flame, Snowflake, Droplets, Wind, CloudRain } from "lucide-react";
+import { Flame, Snowflake, Droplets, Wind, CloudRain, Sun } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -8,6 +8,7 @@ const weatherOptions = [
   { id: "very-wet", label: "Very Wet", icon: Droplets, color: "text-cyan-500" },
   { id: "very-windy", label: "Very Windy", icon: Wind, color: "text-gray-500" },
   { id: "uncomfortable", label: "Very Uncomfortable", icon: CloudRain, color: "text-purple-500" },
+  { id: "very-comfortable", label: "Very Comfortable", icon: Sun, color: "text-green-500" },
 ];
 
 interface WeatherVariablesProps {

@@ -177,6 +177,15 @@ export const calculateProbabilities = async (
             (t > 85 && humidity[i] > 60) || t > 95 || t < 40
           ).length;
           break;
+        case 'very-comfortable':
+          // Comfortable: temp 65-78°F, humidity <65%, low precipitation, moderate wind
+          count = temps.filter((t: number, i: number) => 
+            t >= 65 && t <= 78 && 
+            humidity[i] < 65 && 
+            precip[i] < 2 && 
+            windSpeed[i] < 15
+          ).length;
+          break;
       }
       
       const probability = total > 0 ? Math.round((count / total) * 100) : 50;
