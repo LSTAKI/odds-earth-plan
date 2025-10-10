@@ -270,3 +270,64 @@ export const calculateProbabilities = async (
   }
 };
 
+// Calculate probabilities for a date range
+export const calculateDateRangeProbabilities = async (
+  lat: number,
+  lon: number,
+  startDate: Date,
+  endDate: Date,
+  conditions: string[]
+): Promise<{
+  dailyPredictions: Array<{
+    date: Date;
+    probabilities: { condition: string; probability: number }[];
+    averageProbability: number;
+  }>;
+  overallProbabilities: { condition: string; probability: number }[];
+}> => {
+  try {
+    const dailyPredictions = [];
+    const currentDate = new Date(startDate);
+    
+    // Calculate predictions for each day in the range
+    while (currentDate <= endDate) {
+      const probabilities = await calculateProbabilities(
+        lat,
+        lon,
+        new Date(currentDate),
+        conditions
+      );
+      
+      const averageProbability = probabilities.reduce((sum, p) => sum + p.probability, 0) / probabilities.length;
+      
+      dailyPredictions.push({
+        date: new Date(currentDate),
+        probabilities,
+        averageProbability,
+      });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Calculate overall probabilities (average across all days)
+    const overallProbabilities = conditions.map(condition => {
+      const conditionProbabilities = dailyPredictions.map(day => 
+        day.probabilities.find(p => p.condition === condition)?.probability || 0
+      );
+      const avgProbability = Math.round(
+        conditionProbabilities.reduce((sum, p) => sum + p, 0) / conditionProbabilities.length
+      );
+      
+      return { condition, probability: avgProbability };
+    });
+    
+    return { dailyPredictions, overallProbabilities };
+  } catch (error) {
+    console.error('Error calculating date range probabilities:', error);
+    return {
+      dailyPredictions: [],
+      overallProbabilities: conditions.map(c => ({ condition: c, probability: 50 })),
+    };
+  }
+};
+
