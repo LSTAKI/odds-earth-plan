@@ -97,18 +97,21 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="border-b border-border bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto px-4 py-12 md:py-16">
-          <div className="max-w-3xl mx-auto text-center space-y-4 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium">
+      <section className="relative border-b border-border overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+        
+        <div className="relative container mx-auto px-4 py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium shadow-glow animate-pulse-glow">
               <Sparkles className="w-4 h-4" />
-              Powered by NASA Earth Data
+              Powered by NASA POWER & Open-Meteo
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-secondary animate-fade-in">
               Weather Odds Explorer
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Plan smarter with NASA Earth Data insights.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Unlock 30+ years of NASA climate data combined with real-time historical weather insights to predict conditions with scientific precision.
             </p>
           </div>
         </div>
@@ -119,10 +122,15 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Input Section */}
           <div className="lg:col-span-1">
-            <Card className="shadow-card border-border sticky top-24 animate-scale-in">
-              <CardContent className="p-6 space-y-6">
+            <Card className="shadow-card-hover border-border sticky top-24 animate-scale-in overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+              <CardContent className="relative p-6 space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-4">Configure Analysis</h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-primary to-secondary rounded-full" />
+                    Configure Analysis
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-6">Set parameters to analyze historical weather patterns</p>
                   <div className="space-y-6">
                     <LocationInput
                       onLocationSelect={handleLocationSelect}
@@ -138,12 +146,12 @@ const Index = () => {
 
                 <Button
                   onClick={handleGetOdds}
-                  className="w-full h-12 text-base font-semibold"
+                  className="w-full h-12 text-base font-semibold shadow-glow hover:shadow-glow transition-all"
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isLoading || !location || !date || selectedConditions.length === 0}
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {isLoading ? "Analyzing..." : "Get Weather Odds"}
+                  <Sparkles className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  {isLoading ? "Analyzing NASA Data..." : "Get Weather Odds"}
                 </Button>
               </CardContent>
             </Card>
